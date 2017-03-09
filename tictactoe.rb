@@ -1,5 +1,5 @@
 class Player
-  attr_reader :marker, :name
+  attr_reader :marker, :name, :ai
   attr_accessor :guesses
   
   @@player_number = 0
@@ -14,6 +14,8 @@ class Player
     @name = gets.chomp
     @marker = @@player_number == 1 ? "X" : "O"
     @guesses = Array.new
+    puts "Are you a dumb computer player? (y/n)"
+    @ai = true if gets.chomp.upcase == "Y"
   end
   
 end
@@ -50,9 +52,14 @@ class Board
   
   def check_win(moves)
     Wins.each do |w|
-      return true if w.select {|i| moves.include? i }.count == 3
+      return true if w.select { |i| moves.include? i }.count == 3
     end
     false
+  end
+
+  def ai_move
+    left = @cells[1..10].reject { |i| i == "X" || i == "O" }
+    return left.sample
   end
   
 end
@@ -71,7 +78,12 @@ class Game
     while true
       puts "\n"
       puts "#{@player[@turn_id].name}, place your #{@player[@turn_id].marker}"
-      move = gets.chomp.to_i
+      if @player[@turn_id].ai
+        move = @board.ai_move
+        sleep 1.5
+      else
+        move = gets.chomp.to_i
+      end
       if @board.turn(@player[@turn_id], move)
         @board.draw
         if @board.check_win(@player[@turn_id].guesses)
